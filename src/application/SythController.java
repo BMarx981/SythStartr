@@ -5,6 +5,8 @@ import java.util.ResourceBundle;
 
 import com.jsyn.JSyn;
 import com.jsyn.Synthesizer;
+import com.jsyn.scope.AudioScope;
+import com.jsyn.unitgen.EnvelopeDAHDSR;
 import com.jsyn.unitgen.LineOut;
 import com.jsyn.unitgen.TunableFilter;
 import com.jsyn.unitgen.UnitOscillator;
@@ -63,8 +65,10 @@ public class SythController implements Initializable {
 	double amp = 0.2;
 	
 	Synthesizer synth = JSyn.createSynthesizer();
+	AudioScope scope = null;
 	CoreOscillator core = new CoreOscillator();
 	CoreFilter coreFilter = new CoreFilter();
+	EnvelopeDAHDSR adsr = new EnvelopeDAHDSR();
 	UnitOscillator osc;
 	TunableFilter filter;
 	LineOut out = new LineOut();
@@ -79,6 +83,7 @@ public class SythController implements Initializable {
 		cb.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() { 
             public void changed(ObservableValue ov, Number value, Number nv) { 
             	osc.stop();
+            	osc.flattenOutputs();
             	osc.amplitude.set(0.0);
             	out.stop();
             	synth.stop();
@@ -95,6 +100,7 @@ public class SythController implements Initializable {
 			public void changed(ObservableValue ov, Number value, Number nv) {
 				osc.stop();
 				osc.amplitude.set(0.0);
+				osc.flattenOutputs();
 				out.stop();
 				synth.stop();
 				filter.stop();
@@ -138,13 +144,22 @@ public class SythController implements Initializable {
 				filterLabel.setText(String.valueOf(val.intValue()) + " Hz");
 			}
 		});
+//		adsr.amplitude.set(amp);
+//		adsr.attack.set(0.2);
+//		adsr.decay.set(0.5);
+//		adsr.sustain.set(0.5);
+//		adsr.release.set(0.1);
+
 		osc.amplitude.set(0.07);
-		osc.output.connect(0,filter.input, 0);
+		osc.output.connect(adsr.input);
+		adsr.output.connect(0, osc.amplitude, 0);
         filter.output.connect(0, out.input, 0);
         filter.output.connect(0, out.input, 1);
-        synth.add(filter);
         synth.add(osc);
+        synth.add(adsr);
+        synth.add(filter);
 		synth.add(out);
+		scope = new AudioScope(synth);
 		out.start();
 	}
 	
@@ -262,6 +277,10 @@ public class SythController implements Initializable {
 		synth.start();
 	}
 	
+	public void releaseNote() {
+		osc.noteOff();
+	}
+	
 	private void keyboardSetup() {
 		ap.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.A) {
@@ -314,7 +333,6 @@ public class SythController implements Initializable {
 				keyEvent.consume();
 			}
 		});
-
 	}
 
 }
