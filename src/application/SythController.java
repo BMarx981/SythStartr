@@ -5,6 +5,7 @@ import java.util.ResourceBundle;
 
 import com.jsyn.JSyn;
 import com.jsyn.Synthesizer;
+import com.jsyn.unitgen.EnvelopeDAHDSR;
 import com.jsyn.unitgen.LineOut;
 import com.jsyn.unitgen.TunableFilter;
 import com.jsyn.unitgen.UnitOscillator;
@@ -28,6 +29,8 @@ public class SythController implements Initializable {
 	@FXML Slider filterFreq = new Slider();
 	@FXML Button start = new Button();
 	@FXML Button stop = new Button();
+	@FXML Button upOct = new Button();
+	@FXML Button downOct = new Button();
 	@FXML Label oscLabel = new Label();
 	@FXML Label filterLabel = new Label();
 	@FXML Slider leftOutSlider = new Slider(0.0, 1.0, 0.5);
@@ -60,11 +63,12 @@ public class SythController implements Initializable {
 	String[] oscChoices = {"Sine", "Square", "Saw", "Triangle"};
 	String[] filterChoices = {"LowPass", "HighPass", "BandPass", "StateVariable"};
 	double freq = 0.0;
-	double amp = 0.2;
+	double amp = 0.3;
 	
 	Synthesizer synth = JSyn.createSynthesizer();
 	CoreOscillator core = new CoreOscillator();
 	CoreFilter coreFilter = new CoreFilter();
+	EnvelopeDAHDSR adsr = new EnvelopeDAHDSR();
 	UnitOscillator osc;
 	TunableFilter filter;
 	LineOut out = new LineOut();
@@ -84,8 +88,8 @@ public class SythController implements Initializable {
             	synth.stop();
             	synth.remove(osc);
             	osc = null;
+            	osc = new CoreOscillator();
                 osc = core.setMainOsc(oscChoices[nv.intValue()].toLowerCase()); 
-                synth.add(osc);
                 changeOsc();
             }
         });
@@ -100,6 +104,7 @@ public class SythController implements Initializable {
 				filter.stop();
 				synth.remove(filter);
 				filter = null;
+				filter = new CoreFilter();
 				filter = coreFilter.setMainFilter(filterChoices[nv.intValue()]);
 				changeFilter();
 			}
@@ -138,18 +143,19 @@ public class SythController implements Initializable {
 				filterLabel.setText(String.valueOf(val.intValue()) + " Hz");
 			}
 		});
-		osc.amplitude.set(0.07);
 		osc.output.connect(0,filter.input, 0);
+		adsr.output.connect(osc.amplitude);
         filter.output.connect(0, out.input, 0);
         filter.output.connect(0, out.input, 1);
+        synth.add(adsr);
         synth.add(filter);
         synth.add(osc);
 		synth.add(out);
+		synth.start();
 		out.start();
 	}
 	
 	public void startPressed(ActionEvent e) {
-		synth.start();
 		out.start();
 	}
 	
@@ -315,6 +321,18 @@ public class SythController implements Initializable {
 			}
 		});
 
+	}
+	
+	public void upOctave(ActionEvent e) {
+		for (int i = 0; i < freqs.length; i++) {
+			freqs[i] += freqs[i];
+		}
+	}
+	
+	public void downOctave(ActionEvent e) {
+		for (int i = 0; i < freqs.length; i++) {
+			freqs[i] = freqs[i]/2;
+		}
 	}
 
 }

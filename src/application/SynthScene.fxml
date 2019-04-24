@@ -55,5 +55,7 @@
       </HBox>
       <ChoiceBox fx:id="cb" layoutX="12.0" layoutY="133.0" prefWidth="150.0" />
       <ChoiceBox fx:id="filterBox" layoutX="181.0" layoutY="133.0" prefWidth="150.0" />
+      <Button fx:id="downOct" layoutX="343.0" layoutY="362.0" mnemonicParsing="false" onAction="#downOctave" text="&lt; Oct" />
+      <Button fx:id="upOct" layoutX="421.0" layoutY="362.0" mnemonicParsing="false" onAction="#upOctave" text="Oct &gt;" />
    </children>
 </AnchorPane>
